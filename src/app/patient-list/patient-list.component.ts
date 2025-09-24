@@ -2,11 +2,13 @@ import { Component, OnInit, ViewChild, Output, EventEmitter, inject, AfterViewIn
 import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { merge } from 'rxjs';
 import { Patient, PatientQueryRequest } from '../models/patient.model';
 import { PatientService } from '../services/patient.service';
 
@@ -16,6 +18,7 @@ import { PatientService } from '../services/patient.service';
     CommonModule,
     MatTableModule,
     MatPaginatorModule,
+    MatSortModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
@@ -30,6 +33,7 @@ export class PatientListComponent implements OnInit, AfterViewInit {
   searchControl = new FormControl('');
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
   @Output() edit = new EventEmitter<Patient>();
   @Output() delete = new EventEmitter<number>();
 
@@ -47,13 +51,19 @@ export class PatientListComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+
+    // Listen to sort and paginator changes
+    merge(this.sort.sortChange, this.paginator.page).subscribe(() => {
+      this.loadPatients();
+    });
   }
 
   public loadPatients(documentNumber = '') {
     const request: PatientQueryRequest = {
       filters: { DocumentNumber: documentNumber },
-      orden: 'FirstName',
-      asc: true,
+      orden: this.sort?.active || 'FirstName',
+      asc: this.sort?.direction === 'asc',
       pageNumber: this.paginator?.pageIndex || 1,
       pageSize: this.paginator?.pageSize || 10
     };
