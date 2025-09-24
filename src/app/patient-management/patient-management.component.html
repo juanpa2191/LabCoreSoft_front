@@ -1,0 +1,11 @@
+<div *ngIf="mode === 'list'">
+  <h1>Gestión de Pacientes</h1>
+  <button mat-raised-button color="primary" (click)="onAdd()">Agregar Paciente</button>
+  <app-patient-list (edit)="onEdit($event)" (delete)="onDelete($event)"></app-patient-list>
+</div>
+
+<div *ngIf="mode === 'form'">
+  <h1>{{ currentPatient ? 'Editar Paciente' : 'Registrar Paciente' }}</h1>
+  <app-patient-form [patient]="currentPatient" (save)="onSave($event)"></app-patient-form>
+  <button mat-button (click)="onCancel()">Cancelar</button>
+</div>
